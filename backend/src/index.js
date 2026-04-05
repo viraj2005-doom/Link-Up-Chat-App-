@@ -13,7 +13,11 @@ const __dirname = path.dirname(__filename)
 dotenv.config({ path: path.join(__dirname, '.env') })
 
 const PORT = process.env.PORT || 5001
+//middlewares
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
+//routes
 app.use("/api/auth", authRoute)
 
 const startServer = async () => {
