@@ -1,6 +1,7 @@
 import User from "../models/user.model.js"
 import { generateToken } from "../services/utils.js"
 import bcrypt from 'bcryptjs'
+import cloudinary from '../services/cloudinary.js'
 export const signup = async (req,res) => {
     const {fullName, email,password} = req.body
     try {
@@ -102,5 +103,69 @@ export const logout = (req,res) => {
 }
 
 export const updateProfile = async (req,res) => {
-    
+    try {
+        const { profilePicture } = req.body ?? {}
+        const userId = req.user?.userId
+
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" })
+        }
+
+        if (!profilePicture) {
+            return res.status(400).json({ message: "Profile picture is required" })
+        }
+
+        const uploadResponse = await cloudinary.uploader.upload(profilePicture, {
+            public_id: `profile_pictures/${userId}`
+        })
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { profilePicture: uploadResponse.secure_url },
+            { new: true }
+        )
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" })
+        }
+
+        res.status(200).json({
+            _id: updatedUser._id,
+            fullName: updatedUser.fullName,
+            email: updatedUser.email,
+            profilePicture: updatedUser.profilePicture,
+            message: "Profile picture updated successfully"
+        })
+        
+    } catch (error) {
+        console.log("Error in updateProfile: ", error)
+        res.status(500).json({message: "Internal Server error"})
+    }
+}
+
+
+export const checkAuth = async (req, res) => {
+    try {
+        const userId = req.user?.userId
+
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" })
+        }
+
+        const user = await User.findById(userId).select("-password")
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" })
+        }
+
+        res.status(200).json({
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            profilePicture: user.profilePicture
+        })
+    } catch (error) {
+        console.log("Error in checkAuth: ", error)
+        res.status(500).json({message: "Internal Server error"})
+    }
 }
