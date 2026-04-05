@@ -6,9 +6,9 @@ import { logout } from '../controllers/auth.controller.js';
 const router  = express.Router();
 
 router.post('/signup', signup)
-
 router.post('/signin', signin) 
-
 router.get('/logout', logout)
+
+router.put("/update-profile", protectRoute, updateProfile)
 
 export default router;

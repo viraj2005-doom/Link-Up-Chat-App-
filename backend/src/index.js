@@ -3,6 +3,9 @@ import authRoute from './routes/auth.route.js'
 import dotenv from 'dotenv'
 import { connectDB } from './config/db.config.js'
 import path from 'path'
+import cookieParser from 'cookie-parser'
+import { protectRoute } from './middlewares/auth.middleware.js'
+import { updateProfile } from './controllers/auth.controller.js'
 import { fileURLToPath } from 'url'
 
 const app = express()
@@ -16,6 +19,8 @@ const PORT = process.env.PORT || 5001
 //middlewares
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
+
 
 //routes
 app.use("/api/auth", authRoute)
