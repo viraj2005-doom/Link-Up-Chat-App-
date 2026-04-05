@@ -13,7 +13,8 @@ export const protectRoute = (req, res, next) => {
 
         req.user = decoded
         next()
-    } catch (error) {
+    } 
+    catch (error) {
         console.log('Error in protectRoute:', error)
 
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
