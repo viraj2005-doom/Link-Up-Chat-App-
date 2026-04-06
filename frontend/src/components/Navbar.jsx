@@ -1,7 +1,9 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '../store/useAuthStore'
 
 const Navbar = () => {
+  const { authUser, isCheckingAuth } = useAuthStore()
   return (
     <nav className="flex items-center gap-4 p-4 border-b">
       <Link to="/">Home</Link>
