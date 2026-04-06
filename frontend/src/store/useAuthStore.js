@@ -1,6 +1,8 @@
 import { create } from 'zustand'
+import toast from 'react-hot-toast'
+
 import { axiosInstance } from '../lib/axios'
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
     authUser: null,
     isSigningUp: false,
     isLoggingIn: false,
@@ -20,6 +22,54 @@ export const useAuthStore = create((set) => ({
     },
 
     signup: async (data) => {
+        set({ isSigningUp: true })
+        try {
+            const res = await axiosInstance.post('/auth/signup', data)
+            set({ authUser: res.data })
+            toast.success(res?.data?.message ?? "Signup successful!")
+        } catch (error) {
+            toast.error(
+                error?.response?.data?.message ??
+                    error?.message ??
+                    "Signup failed. Please try again."
+            )
+            throw error
+        } finally {
+            set({ isSigningUp: false })
+        }
 
-}
+        },
+
+    logout: async () => {
+        try {
+            await axiosInstance.get('/auth/logout')
+            set({ authUser: null })
+            toast.success("Logged out successfully!")
+            
+        } catch (error) {
+            toast.error("Failed to log out. Please try again.")
+
+        }
+    },
+
+    signin: async (data) => {
+        try {
+            set({ isLoggingIn: true })
+            const res = await axiosInstance.post('/auth/signin', data)
+            set({ authUser: res.data })
+            toast.success(res?.data?.message ?? "Login successful!")
+        } catch (error) {
+            toast.error(
+                error?.response?.data?.message ??
+                    error?.message ??
+                    "Login failed. Please try again."
+            )
+        } finally {
+            set({ isLoggingIn: false })
+        }
+    },
+
+    login: async (data) => {
+        return get().signin(data)
+    }
 }))

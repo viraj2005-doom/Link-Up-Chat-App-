@@ -1,7 +1,9 @@
 import React from 'react'
+import { useAuthStore } from '../store/useAuthStore'
 
 const ProfilePage = () => {
-    const { authUser, isCheckingAuth } = useAuthStore()
+  const { authUser, isCheckingAuth } = useAuthStore()
+
   return (
     <div>ProfilePage</div>
   )
