@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { axiosInstance } from '../lib/axios'
 export const useAuthStore = create((set, get) => ({
     authUser: null,
+    onlineUsers: [],
     isSigningUp: false,
     isLoggingIn: false,
     isUpdatingProfile: false,
@@ -46,7 +47,7 @@ export const useAuthStore = create((set, get) => ({
             set({ authUser: null })
             toast.success("Logged out successfully!")
             
-        } catch (error) {
+        } catch {
             toast.error("Failed to log out. Please try again.")
 
         }
