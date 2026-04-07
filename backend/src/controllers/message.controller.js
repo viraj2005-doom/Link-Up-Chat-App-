@@ -26,6 +26,8 @@ export const getMessagesBetweenUsers = async (req, res) => {
                 { senderId: usertochatid, receiverId: myId }
             ] //find all the messages between the logged in user and the user to chat with
         })
+            .populate("senderId", "fullName profilePicture")
+            .populate("receiverId", "fullName profilePicture")
 
         res.status(200).json(messages)
     } catch (error) {
@@ -37,7 +39,7 @@ export const getMessagesBetweenUsers = async (req, res) => {
 export const sendMessage = async (req, res) => {
     try {
         const { text, image } = req.body;
-        const { id: receiverId } = req.query;
+        const { id: receiverId } = req.params;
         const senderId = req.user?.userId;
 
         let imageUrl;
@@ -53,10 +55,12 @@ export const sendMessage = async (req, res) => {
             image: imageUrl
         })
 
-        await newMessage.save(); // jarur j nathi save ni, create thay atle save thay j
+        const populatedMessage = await Message.findById(newMessage._id)
+            .populate("senderId", "fullName profilePicture")
+            .populate("receiverId", "fullName profilePicture")
 
         //todo: realtime message functionality using socket.io
-        res.status(201).json(newMessage)
+        res.status(201).json(populatedMessage)
 
 
     } catch (error) {
