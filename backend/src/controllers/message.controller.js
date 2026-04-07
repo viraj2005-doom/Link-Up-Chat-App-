@@ -1,6 +1,7 @@
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 import cloudinary from "../services/cloudinary.js";
+import { getReceiverSocketId, io } from "../services/socket.js";
 
 export const getUsersForSidebar = async (req, res) => {
     try {
@@ -59,7 +60,12 @@ export const sendMessage = async (req, res) => {
             .populate("senderId", "fullName profilePicture")
             .populate("receiverId", "fullName profilePicture")
 
-        //todo: realtime message functionality using socket.io
+        const receiverSocketId = getReceiverSocketId(receiverId);
+
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", populatedMessage);
+        }
+
         res.status(201).json(populatedMessage)
 
 

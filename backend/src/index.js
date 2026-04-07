@@ -5,12 +5,10 @@ import dotenv from 'dotenv'
 import { connectDB } from './config/db.config.js'
 import path from 'path'
 import cookieParser from 'cookie-parser'
-import { protectRoute } from './middlewares/auth.middleware.js'
-import { updateProfile } from './controllers/auth.controller.js'
 import { fileURLToPath } from 'url'
 import cors from 'cors'
-
-const app = express()
+import { app, server } from './services/socket.js'
+//import express from 'express'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -35,7 +33,7 @@ app.use ("/api/message", messageRoute)
 const startServer = async () => {
     try {
         await connectDB()
-        app.listen(PORT, () => {
+        server.listen(PORT, () => {
             console.log(`Server is running on port: ${PORT}`)
         })
     } catch (error) {
