@@ -2,6 +2,7 @@ import User from "../models/user.model.js"
 import { generateToken } from "../services/utils.js"
 import bcrypt from 'bcryptjs'
 import cloudinary from '../services/cloudinary.js'
+import { createDecipheriv } from "crypto"
 export const signup = async (req,res) => {
     const {fullName, email,password} = req.body
     try {
@@ -40,6 +41,7 @@ export const signup = async (req,res) => {
                 fullName : newUser.fullName,
                 email : newUser.email,
                 profilePicture : newUser.profilePicture,
+                createdAt: newUser.createdAt,
                 accessToken,
                 message: "User created successfully"})
         }
@@ -75,6 +77,7 @@ export const signin = async (req,res) => {
                     fullName : user.fullName,
                     email : user.email,
                     profilePicture : user.profilePicture,
+                    createdAt: user.createdAt,
                     accessToken,
                     message: "User signed in successfully"})
             }
@@ -134,6 +137,7 @@ export const updateProfile = async (req,res) => {
             fullName: updatedUser.fullName,
             email: updatedUser.email,
             profilePicture: updatedUser.profilePicture,
+            createdAt: updatedUser.createdAt,
             message: "Profile picture updated successfully"
         })
         
@@ -162,7 +166,8 @@ export const checkAuth = async (req, res) => {
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
-            profilePicture: user.profilePicture
+            profilePicture: user.profilePicture,
+            createdAt: user.createdAt
         })
     } catch (error) {
         console.log("Error in checkAuth: ", error)
