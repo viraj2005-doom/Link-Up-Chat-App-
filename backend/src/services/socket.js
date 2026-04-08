@@ -5,10 +5,14 @@ import jwt from "jsonwebtoken";
 
 export const app = express();
 export const server = http.createServer(app);
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
 export const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
+        origin: allowedOrigins,
         credentials: true,
     },
 });

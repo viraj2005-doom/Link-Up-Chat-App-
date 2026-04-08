@@ -4,7 +4,9 @@ import { io } from 'socket.io-client'
 
 import { axiosInstance } from '../lib/axios'
 import { getAccessToken, setAccessToken } from '../lib/auth'
-const BASE_URL =  import.meta.env.MODE === "development" ? 'http://localhost:5001' : '/api'
+const SOCKET_URL =
+    import.meta.env.VITE_SOCKET_URL ||
+    (import.meta.env.MODE === "development" ? 'http://localhost:5001' : window.location.origin)
 export const useAuthStore = create((set, get) => ({
     authUser: null,
     onlineUsers: [],
@@ -119,7 +121,7 @@ export const useAuthStore = create((set, get) => ({
         const token = getAccessToken()
         if (!authUser || get().socket?.connected) return // if user is not authenticated, do not connect to socket
         if (!token) return
-        const socket = io(BASE_URL, {
+        const socket = io(SOCKET_URL, {
             auth: {
                 token,
             },
