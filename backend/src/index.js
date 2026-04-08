@@ -1,19 +1,16 @@
 import express from 'express'
 import authRoute from './routes/auth.route.js'
 import messageRoute from './routes/message.route.js'
-import dotenv from 'dotenv'
+import './config/env.js'
 import { connectDB } from './config/db.config.js'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import { fileURLToPath } from 'url'
 import cors from 'cors'
 import { app, server } from './services/socket.js'
-//import express from 'express'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
-dotenv.config({ path: path.join(__dirname, '.env') })
 
 const PORT = process.env.PORT || 5001
 //middlewares
@@ -30,6 +27,13 @@ app.use(cors({
 app.use("/api/auth", authRoute)
 app.use ("/api/message", messageRoute)
 
+if (process.env.NODE_ENV==="production") {
+    app.use(express.static(path.join(__dirname, '../frontend/dist')))
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/dist/index.html'))
+    })
+}
 const startServer = async () => {
     try {
         await connectDB()
