@@ -2,6 +2,12 @@
 
 A full-stack real-time chat application built with React, Vite, Zustand, Node.js, Express, MongoDB, and Socket.IO.
 
+## Live Deployment
+
+Hosted app:
+
+- https://link-up-chat-app-1.onrender.com/
+
 This project includes:
 
 - User signup and login
@@ -104,6 +110,38 @@ Start the backend server:
 
 ```bash
 npm start
+```
+
+## Deployment
+
+This app is deployed on Render:
+
+- Production URL: https://link-up-chat-app-1.onrender.com/
+
+Production notes:
+
+- The frontend and backend are served from the same Render web service.
+- MongoDB uses MongoDB Atlas in production.
+- Static frontend files are served by the Express backend in production mode.
+
+Required backend environment variables on Render:
+
+```env
+MONGODB_URI=your_mongodb_atlas_connection_string
+JWT_ACCESS_TOKEN_SECRET=your_access_token_secret
+JWT_REFRESH_TOKEN_SECRET=your_refresh_token_secret
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+NODE_ENV=production
+```
+
+If deploying the frontend and backend as separate services, also configure:
+
+```env
+CORS_ORIGIN=https://your-frontend-url.onrender.com
+VITE_API_URL=https://your-backend-url.onrender.com/api
+VITE_SOCKET_URL=https://your-backend-url.onrender.com
 ```
 
 ## Available Scripts
