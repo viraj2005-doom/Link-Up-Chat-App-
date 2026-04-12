@@ -1,9 +1,11 @@
 import { create } from 'zustand'
 import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
+import { signInWithPopup, signOut } from 'firebase/auth'
 
 import { axiosInstance } from '../lib/axios'
 import { getAccessToken, setAccessToken } from '../lib/auth'
+import { auth, googleProvider, isFirebaseConfigured } from '../lib/firebase'
 const SOCKET_URL =
     import.meta.env.VITE_SOCKET_URL ||
     (import.meta.env.MODE === "development" ? 'http://localhost:5001' : window.location.origin)
@@ -12,6 +14,7 @@ export const useAuthStore = create((set, get) => ({
     onlineUsers: [],
     isSigningUp: false,
     isLoggingIn: false,
+    isGoogleSigningIn: false,
     isUpdatingProfile: false,
     isCheckingAuth: true,
     socket:null,
@@ -59,6 +62,9 @@ export const useAuthStore = create((set, get) => ({
 
     logout: async () => {
         try {
+            if (auth) {
+                await signOut(auth)
+            }
             setAccessToken(null)
             set({ authUser: null })
             toast.success("Logged out successfully!")
@@ -66,6 +72,41 @@ export const useAuthStore = create((set, get) => ({
         } catch {
             toast.error("Failed to log out. Please try again.")
 
+        }
+    },
+
+    googleSignin: async () => {
+        if (!isFirebaseConfigured || !auth || !googleProvider) {
+            toast.error("Firebase Google sign-in is not configured yet.")
+            return
+        }
+
+        try {
+            set({ isGoogleSigningIn: true })
+            const result = await signInWithPopup(auth, googleProvider)
+            const idToken = await result.user.getIdToken()
+            const res = await axiosInstance.post('/auth/google', { idToken })
+
+            setAccessToken(res.data.accessToken)
+            set({ authUser: res.data })
+            toast.success(res?.data?.message ?? "Google sign-in successful!")
+            get().connectSocket()
+        } catch (error) {
+            const errorCode = error?.code
+
+            if (errorCode !== 'auth/popup-closed-by-user') {
+                if (auth) {
+                    await signOut(auth)
+                }
+                setAccessToken(null)
+                toast.error(
+                    error?.response?.data?.message ??
+                        error?.message ??
+                        "Google sign-in failed. Please try again."
+                )
+            }
+        } finally {
+            set({ isGoogleSigningIn: false })
         }
     },
 

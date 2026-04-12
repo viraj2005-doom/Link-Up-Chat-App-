@@ -12,12 +12,21 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required:true,
+        default: null,
     },
     profilePicture: {
         type: String,
         default: '',
-    },    
+    },
+    authProvider: {
+        type: String,
+        enum: ['local', 'google'],
+        default: 'local',
+    },
+    firebaseUid: {
+        type: String,
+        default: null,
+    },
 },{
     timestamps: true
 })

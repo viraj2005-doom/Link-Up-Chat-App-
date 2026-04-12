@@ -2,7 +2,7 @@ import User from "../models/user.model.js"
 import { generateToken } from "../services/utils.js"
 import bcrypt from 'bcryptjs'
 import cloudinary from '../services/cloudinary.js'
-import { createDecipheriv } from "crypto"
+import { verifyFirebaseIdToken, isFirebaseAdminConfigured } from "../services/firebase-admin.js"
 export const signup = async (req,res) => {
     const {fullName, email,password} = req.body
     try {
@@ -22,6 +22,10 @@ export const signup = async (req,res) => {
         const user = await User.findOne({email: normalizedEmail})
         if(user)
         {
+            if (user.authProvider === 'google' && !user.password) {
+                return res.status(400).json({message: "This email is already registered with Google. Please continue with Google sign-in."})
+            }
+
             return res.status(400).json({message: "User already exists"})
         }
 
@@ -64,6 +68,10 @@ export const signin = async (req,res) => {
         if(!user){
             return res.status(400).json({message: "Invalid email or password"})
         }
+
+        if (!user.password) {
+            return res.status(400).json({message: "This account uses Google sign-in. Please continue with Google."})
+        }
         
         await bcrypt.compare(password, user.password, (err, isMatch) => {
             if(err) {
@@ -88,6 +96,80 @@ export const signin = async (req,res) => {
     } catch (error) {
         console.log("Error in signin: ", error)
         res.status(500).json({message: "Internal Server error"})
+    }
+}
+
+export const googleSignin = async (req, res) => {
+    try {
+        if (!isFirebaseAdminConfigured()) {
+            return res.status(500).json({ message: "Firebase Admin is not configured on the server" })
+        }
+
+        const { idToken } = req.body ?? {}
+
+        if (!idToken) {
+            return res.status(400).json({ message: "Google ID token is required" })
+        }
+
+        const decodedToken = await verifyFirebaseIdToken(idToken)
+        const normalizedEmail = decodedToken.email?.trim().toLowerCase()
+
+        if (!normalizedEmail) {
+            return res.status(400).json({ message: "Google account email is required" })
+        }
+
+        let user = await User.findOne({ email: normalizedEmail })
+
+        if (!user) {
+            user = await User.create({
+                email: normalizedEmail,
+                fullName: decodedToken.name?.trim() || normalizedEmail.split('@')[0],
+                profilePicture: decodedToken.picture || '',
+                authProvider: 'google',
+                firebaseUid: decodedToken.uid,
+            })
+        } else {
+            const updates = {}
+
+            if (!user.fullName && decodedToken.name?.trim()) {
+                updates.fullName = decodedToken.name.trim()
+            }
+
+            if (!user.profilePicture && decodedToken.picture) {
+                updates.profilePicture = decodedToken.picture
+            }
+
+            if (!user.firebaseUid) {
+                updates.firebaseUid = decodedToken.uid
+            }
+
+            if (user.authProvider !== 'google' && !user.password) {
+                updates.authProvider = 'google'
+            }
+
+            if (Object.keys(updates).length > 0) {
+                user = await User.findByIdAndUpdate(user._id, updates, { new: true })
+            }
+        }
+
+        const accessToken = generateToken(user._id, res)
+
+        res.status(200).json({
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            profilePicture: user.profilePicture,
+            createdAt: user.createdAt,
+            accessToken,
+            message: "Google sign-in successful"
+        })
+    } catch (error) {
+        console.log("Error in googleSignin: ", error)
+        if (error?.code?.startsWith?.('auth/')) {
+            return res.status(401).json({ message: "Invalid or expired Google token" })
+        }
+
+        res.status(500).json({ message: "Failed to sign in with Google" })
     }
 }
 
